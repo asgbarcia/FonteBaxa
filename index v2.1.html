@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+	<!-- Favicon Fonte Baxa -->
+		<link rel="icon" type="image/png" href="images/favicon.png">
+		<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+        <link rel="stylesheet" href="css/leaflet.css"><link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/MarkerCluster.css">
+        <link rel="stylesheet" href="css/MarkerCluster.Default.css">
+        <link rel="stylesheet" href="css/leaflet-search.css">
+        <style>
+		/* Splash screen */
+			#splash {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: white;
+			opacity: 1;
+			z-index: 9999;
+
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+
+			font-family: Arial, sans-serif;
+			}
+
+			#splash img {
+			width: 120px;
+			height: auto;
+			margin-bottom: 15px;
+			border-radius: 12px;
+			}
+
+			#splash h2 {
+			font-size: 18px;
+			color: #444;
+			}
+			
+		/* Map */
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+		/* ======= Títulos dentro del selector de capas ======= */
+.layer-title {
+    font-weight: bold;
+    font-size: 10px;
+    color: #444;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 6px;
+    margin-bottom: 4px;
+    pointer-events: none;
+}
+
+/* Quitar checkbox solo a los títulos */
+.leaflet-control-layers-overlays label:has(.layer-title) input {
+    display: none !important;
+}
+
+/* Quitar también el espacio que deja el checkbox */
+.leaflet-control-layers-overlays label:has(.layer-title) span {
+    margin-left: 0px !important;
+}
+
+
+        </style>
+        <title>Visor Jardines Fonte Baxa</title>
+    </head>
+    <body>
+	<!-- Splash Screen -->
+<div id="splash">
+  <img src="images/IconoFonteBaxa.jpg" alt="Fonte Baxa">
+  <h2>Cargando visor...</h2>
+</div>
+
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script><script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/multi-style-layer.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.markercluster.js"></script>
+        <script src="js/leaflet-search.js"></script>
+        <script src="data/elementos_3.js"></script>
+        <script src="data/arboreas_0.js"></script>
+        <script src="data/Especiesespecies_1.js"></script>
+        <script src="data/Cameliasidentificadascamelias_2.js"></script>
+        <script src="data/Cameliascamelias_4.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:22, minZoom:1
+        }).fitBounds([[43.54574137428877,-6.542953019675787],[43.54757284405861,-6.53934741215264]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        document.querySelector(".leaflet-popup-pane").addEventListener("load", function(event) {
+          var tagName = event.target.tagName,
+            popup = map._popup;
+          // Also check if flag is already set.
+          if (tagName === "IMG" && popup && !popup._updated) {
+            popup._updated = true; // Set flag to prevent looping.
+            popup.update();
+          }
+        }, true);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleHybrid_0');
+        map.getPane('pane_GoogleHybrid_0').style.zIndex = 400;
+        var layer_GoogleHybrid_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleHybrid_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20,
+        });
+        layer_GoogleHybrid_0;
+        map.addLayer(layer_GoogleHybrid_0);
+        map.createPane('pane_OpenStreetMap_1');
+        map.getPane('pane_OpenStreetMap_1').style.zIndex = 401;
+        var layer_OpenStreetMap_1 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMap_1',
+            opacity: 1.0,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+		
+// ================================
+// TESSELAS PROPIAS (QTiles)
+// ================================
+
+map.createPane('pane_Teselas_Propias');
+map.getPane('pane_Teselas_Propias').style.zIndex = 402;
+
+var layer_Teselas_Propias = L.tileLayer(
+  "https://asgbarcia.github.io/teselas-fontebaxa/tile1/{z}/{x}/{y}.png", {
+    maxZoom: 22,
+    tms: true,
+    updateWhenIdle: true,
+    keepBuffer: 3,
+    maxNativeZoom: 20,
+    attribution: 'Generated by QTiles',
+    pane: 'pane_Teselas_Propias'
+});
+
+	
+layer_OpenStreetMap_1;
+map.addLayer(layer_OpenStreetMap_1);
+
+// Activar teselas propias al inicio (opcional)
+map.addLayer(layer_Teselas_Propias);
+
+		
+function pop_elementos_3(feature, layer) {
+
+    var popupContent =
+        '<div style="text-align:center; font-size:18px; font-weight:bold;">'
+        + (feature.properties['Nombre'] !== null
+            ? feature.properties['Nombre'].toLocaleString()
+            : '')
+        + '</div>';
+
+    layer.bindPopup(popupContent, {maxHeight: 200});
+}
+
+
+        function style_elementos_3_0() {
+            return {
+                pane: 'pane_elementos_3',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,255,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_elementos_3');
+        map.getPane('pane_elementos_3').style.zIndex = 402;
+        map.getPane('pane_elementos_3').style['mix-blend-mode'] = 'normal';
+        var layer_elementos_3 = new L.geoJson(json_elementos_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_elementos_3',
+            layerName: 'layer_elementos_3',
+            pane: 'pane_elementos_3',
+            onEachFeature: pop_elementos_3,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_elementos_3_0(feature));
+            },
+        });
+        var cluster_elementos_3 = new L.MarkerClusterGroup({showCoverageOnHover: false,
+            spiderfyDistanceMultiplier: 2});
+        cluster_elementos_3.addLayer(layer_elementos_3);
+
+        bounds_group.addLayer(layer_elementos_3);
+        cluster_elementos_3.addTo(map);
+function pop_arboreas_0(feature, layer) {
+
+    var popupContent =
+        '<div style="text-align:center; font-size:18px; font-weight:bold;">'
+        + (feature.properties['Nombre común'] !== null
+            ? feature.properties['Nombre común'].toLocaleString()
+            : '')
+        + '</div>';
+
+    layer.bindPopup(popupContent, {maxHeight: 200});
+}
+
+
+        function style_arboreas_0_0() {
+            return {
+                pane: 'pane_arboreas_0',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(72,123,182,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_arboreas_0');
+        map.getPane('pane_arboreas_0').style.zIndex = 403;
+        map.getPane('pane_arboreas_0').style['mix-blend-mode'] = 'normal';
+        var layer_arboreas_0 = new L.geoJson(json_arboreas_0, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_arboreas_0',
+            layerName: 'layer_arboreas_0',
+            pane: 'pane_arboreas_0',
+            onEachFeature: pop_arboreas_0,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_arboreas_0_0(feature));
+            },
+        });
+        var cluster_arboreas_0 = new L.MarkerClusterGroup({showCoverageOnHover: false,
+            spiderfyDistanceMultiplier: 2});
+        cluster_arboreas_0.addLayer(layer_arboreas_0);
+
+        bounds_group.addLayer(layer_arboreas_0);
+        cluster_arboreas_0.addTo(map);
+ function pop_Especiesespecies_1(feature, layer) {
+
+    var popupContent =
+        '<div style="text-align:center; font-size:18px; font-weight:bold;">'
+        + (feature.properties['Nombre'] !== null
+            ? feature.properties['Nombre'].toLocaleString()
+            : '')
+        + '</div>';
+
+    layer.bindPopup(popupContent, {maxHeight: 200});
+}
+
+
+        function style_Especiesespecies_1_0() {
+            return {
+                pane: 'pane_Especiesespecies_1',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(61,128,53,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(84,176,74,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Especiesespecies_1');
+        map.getPane('pane_Especiesespecies_1').style.zIndex = 404;
+        map.getPane('pane_Especiesespecies_1').style['mix-blend-mode'] = 'normal';
+        var layer_Especiesespecies_1 = new L.geoJson(json_Especiesespecies_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Especiesespecies_1',
+            layerName: 'layer_Especiesespecies_1',
+            pane: 'pane_Especiesespecies_1',
+            onEachFeature: pop_Especiesespecies_1,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Especiesespecies_1_0(feature));
+            },
+        });
+        var cluster_Especiesespecies_1 = new L.MarkerClusterGroup({showCoverageOnHover: false,
+            spiderfyDistanceMultiplier: 2});
+        cluster_Especiesespecies_1.addLayer(layer_Especiesespecies_1);
+
+        bounds_group.addLayer(layer_Especiesespecies_1);
+        cluster_Especiesespecies_1.addTo(map);
+		
+		
+function pop_Cameliasidentificadascamelias_2(feature, layer) {
+
+    var popupContent =
+        '<div style="font-size:16px;">'       
+        + (feature.properties['ESPECIE / SPECIES'] !== null
+            ? feature.properties['ESPECIE / SPECIES'].toLocaleString()
+            : '')
+        + '</div>';
+
+    layer.bindPopup(popupContent, {maxHeight: 200});
+}
+
+
+        function style_Cameliasidentificadascamelias_2_0() {
+            return {
+                pane: 'pane_Cameliasidentificadascamelias_2',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(128,17,25,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,30,42,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Cameliasidentificadascamelias_2');
+        map.getPane('pane_Cameliasidentificadascamelias_2').style.zIndex = 405;
+        map.getPane('pane_Cameliasidentificadascamelias_2').style['mix-blend-mode'] = 'normal';
+        var layer_Cameliasidentificadascamelias_2 = new L.geoJson(json_Cameliasidentificadascamelias_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Cameliasidentificadascamelias_2',
+            layerName: 'layer_Cameliasidentificadascamelias_2',
+            pane: 'pane_Cameliasidentificadascamelias_2',
+            onEachFeature: pop_Cameliasidentificadascamelias_2,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Cameliasidentificadascamelias_2_0(feature));
+            },
+        });
+        var cluster_Cameliasidentificadascamelias_2 = new L.MarkerClusterGroup({showCoverageOnHover: false,
+            spiderfyDistanceMultiplier: 2});
+        cluster_Cameliasidentificadascamelias_2.addLayer(layer_Cameliasidentificadascamelias_2);
+
+        bounds_group.addLayer(layer_Cameliasidentificadascamelias_2);
+        cluster_Cameliasidentificadascamelias_2.addTo(map);
+
+function pop_Cameliascamelias_4(feature, layer) {
+
+    var popupContent =
+        '<div style="text-align:center; font-size:18px; font-weight:bold; margin-bottom:6px;">'
+        + (feature.properties['ESPECIE / SPECIES'] !== null
+            ? feature.properties['ESPECIE / SPECIES'].toLocaleString()
+            : '')
+        + '</div>'
+		
+        +'<div style="text-align:center; font-size:16px; margin-bottom:6px;">'
+        + (feature.properties['CULTIVAR'] !== null
+            ? feature.properties['CULTIVAR'].toLocaleString()
+            : '')
+        + '</div>'		
+		
+		
+        + '<div style="text-align:center;">'
+		+ (feature.properties['URL'] !== null
+    ? '<a href="' + feature.properties['URL'] + '" target="_blank">Ver ficha</a>'
+    : '')
+        + '</div>';
+
+
+
+    layer.bindPopup(popupContent, {maxHeight: 200});
+}
+
+
+        function style_Cameliascamelias_4_0() {
+            return {
+                pane: 'pane_Cameliascamelias_4',
+                radius: 6.4,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,246,77,1.0)',
+                interactive: true,
+            }
+        }
+        function style_Cameliascamelias_4_1() {
+            return {
+                pane: 'pane_Cameliascamelias_4',
+                radius: 1.4,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,246,77,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Cameliascamelias_4');
+        map.getPane('pane_Cameliascamelias_4').style.zIndex = 406;
+        map.getPane('pane_Cameliascamelias_4').style['mix-blend-mode'] = 'normal';
+var layer_Cameliascamelias_4 = new L.geoJson(json_Cameliascamelias_4, {
+    attribution: '',
+    interactive: true,
+    dataVar: 'json_Cameliascamelias_4',
+    layerName: 'layer_Cameliascamelias_4',
+    pane: 'pane_Cameliascamelias_4',
+    onEachFeature: pop_Cameliascamelias_4,
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, style_Cameliascamelias_4_0(feature));
+    }
+});
+
+        var cluster_Cameliascamelias_4 = new L.MarkerClusterGroup({showCoverageOnHover: false,
+            spiderfyDistanceMultiplier: 2});
+        cluster_Cameliascamelias_4.addLayer(layer_Cameliascamelias_4);
+
+        bounds_group.addLayer(layer_Cameliascamelias_4);
+        cluster_Cameliascamelias_4.addTo(map);
+// ================================
+// LOGO SUPERIOR DERECHA (clicable)
+// ================================
+
+var title = new L.Control({position: 'topright'});
+
+title.onAdd = function (map) {
+    var div = L.DomUtil.create('div');
+
+    div.innerHTML =
+        '<a href="https://www.turismoluarcavaldes.es/bosque-jardin-de-la-fonte-baxa/" target="_blank">'
+        + '<img src="images/IconoFonteBaxa.jpg" '
+        + 'style="width:48px; height:auto; display:block; '
+        + 'border-radius:4px; box-shadow:1 1px 3px rgba(0,0,0,0.15);" '
+        + 'alt="Fonte Baxa Logo">'
+        + '</a>';
+
+    L.DomEvent.disableClickPropagation(div);
+    return div;
+};
+
+title.addTo(map);
+
+///
+        var baseMaps = {};
+        L.control.layers(baseMaps,{
+		'<span class="layer-title">CAPAS</span>': L.layerGroup([]),
+		'<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:rgba(255,246,77,1.0);border:2px solid rgba(0,0,0,1.0);margin-right:6px;"></span> Camelias identificadas': cluster_Cameliascamelias_4,
+		'<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:rgba(219,30,42,1.0);border:2px solid rgba(128,17,25,1.0);margin-right:6px;"></span> Camelias': cluster_Cameliasidentificadascamelias_2,
+		'<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:rgba(84,176,74,1.0);border:2px solid rgba(61,128,53,1.0);margin-right:6px;"></span> Especies': cluster_Especiesespecies_1,
+		'<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:rgba(72,123,182,1.0);border:2px solid rgba(50,87,128,1.0);margin-right:6px;"></span> arboreas': cluster_arboreas_0,
+		'<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,1.0);border:2px solid rgba(0,0,0,1.0);margin-right:6px;"></span> elementos': cluster_elementos_3,
+		'<span class="layer-title">CARTOGRAFÍA</span>': L.layerGroup([]),
+		"Plano jardín": layer_Teselas_Propias,
+		"OpenStreetMap": layer_OpenStreetMap_1,
+		"Google Hybrid": layer_GoogleHybrid_0,}).addTo(map);
+        setBounds();
+        map.addControl(new L.Control.Search({
+            layer: cluster_Cameliascamelias_4,
+            initial: false,
+            hideMarkerOnCollapse: true,
+            propertyName: 'CULTIVAR'}));
+        document.getElementsByClassName('search-button')[0].className +=
+         ' fa fa-binoculars';
+        resetLabels([layer_Cameliasidentificadascamelias_2,layer_Cameliascamelias_4]);
+        map.on("zoomend", function(){
+            resetLabels([layer_Cameliasidentificadascamelias_2,layer_Cameliascamelias_4]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_Cameliasidentificadascamelias_2,layer_Cameliascamelias_4]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_Cameliasidentificadascamelias_2,layer_Cameliascamelias_4]);
+        });
+// Splash desaparece cuando el mapa está listo
+map.whenReady(function () {
+    let splash = document.getElementById("splash");
+    splash.style.opacity = "0";
+    splash.style.transition = "opacity 0.8s";
+
+    setTimeout(() => {
+        splash.style.display = "none";
+    }, 800);
+});
+		
+		
+		
+map.whenReady(function () {
+    let splash = document.getElementById("splash");
+    splash.style.opacity = "0";
+    splash.style.transition = "opacity 0.8s";
+
+    setTimeout(() => {
+        splash.style.display = "none";
+    }, 800);
+});
+
+
+
+		
+        </script>
+    </body>
+</html>
